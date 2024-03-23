@@ -4,22 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mental Health Therapy</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Add CSS file -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Mental Health Therapy</h1>
-        </header>
-        <main id="chatContainer">
-            <!-- Chat interface will be added here -->
-        </main>
-        <footer>
-            <input type="text" id="userInput" placeholder="Type your message...">
+        <div class="chat-box" id="chatBox"></div>
+        <div class="input-box">
+            <input type="text" id="messageInput" placeholder="Type your message...">
             <button onclick="sendMessage()">Send</button>
-        </footer>
+        </div>
     </div>
-    <script src="script.js"></script> <!-- Add JavaScript file -->
+    
+    <script src="script.js"></script>
 </body>
 </html>
 

@@ -1,64 +1,49 @@
-/* styles.css */
-body, html {
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f3f3; /* Light pink */
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
 }
 
 .container {
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
     padding: 20px;
 }
 
-header, footer {
-    background-color: #f0f0f0;
-    padding: 10px;
-    text-align: center;
-}
-
-footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background-color: #fff;
-    padding: 10px;
-    border-top: 1px solid #ccc;
-}
-
-#userInput {
-    width: calc(100% - 70px);
-    padding: 5px;
-    border: 1px solid #ccc;
-}
-
-button {
-    padding: 5px 10px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-}
-
-#chatContainer {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.message {
-    margin: 10px;
-    padding: 10px;
-    background-color: #e0e0e0;
+.chat-box {
+    background-color: #ffffff; /* White */
     border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 20px;
+    overflow-y: scroll;
+    max-height: 400px;
 }
 
-.userMessage {
-    background-color: #007bff;
-    color: #fff;
+.input-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff; /* White */
+    border-radius: 20px;
+    padding: 10px;
 }
 
-.botMessage {
-    background-color: #28a745;
-    color: #fff;
+.input-box input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 20px;
+    outline: none;
+}
+
+.input-box button {
+    background-color: #ff6b6b; /* Pink */
+    color: #ffffff; /* White */
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
+    outline: none;
 }
 
