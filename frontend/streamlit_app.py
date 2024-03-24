@@ -22,7 +22,7 @@ import streamlit as st
 import requests
 
 # Flask server URL
-FLASK_SERVER_URL = "http://127.0.0.1:5001/generate"                   
+FLASK_SERVER_URL = "http://127.0.0.1:5001/chat"                   
 # Update with your Flask server URL
 
 def chat_interface():
