@@ -32,22 +32,21 @@ def chat_interface():
         st.session_state.messages = []
 
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        with st.container():
+            st.write(message["role"] + ": " + message["content"])
 
-    if prompt := st.chat_input("What is up?"):
+    prompt = st.text_input("Enter your message:")
+    if st.button("Send"):
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
 
-        # Send user input to Flask server
         response = send_to_flask_server(prompt)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        if response:
+            st.session_state.messages.append({"role": "assistant", "content": response})
 
 def send_to_flask_server(message):
     try:
         # Send user input to Flask server
-        response = requests.post(FLASK_SERVER_URL, json={"message": message})
+        response = requests.post(FLASK_SERVER_URL, json={"prompt": message})
         if response.status_code == 200:
            print("Recieved") 
            return response.json()  # Assuming Flask server sends back a JSON response with key "response"
