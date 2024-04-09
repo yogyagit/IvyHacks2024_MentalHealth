@@ -14,4 +14,5 @@ def generate_output_with_llm(prompt):
     return f"Generated output for: {prompt}"
 
 if __name__ == '__main__':
+    print('bbobobobobobobo')
     app.run(debug=True)

@@ -22,7 +22,7 @@ def login_page():
 import streamlit as st
 import requests
 
-FLASK_SERVER_URL = "http://127.0.0.1:5001"  # Update with your Flask server URL
+FLASK_SERVER_URL = "http://127.0.0.1:5000"  # Update with your Flask server URL
 
 def send_input_to_backend_initial(user_prompt, transcript):
     data = {"user_prompt": user_prompt, "transcript": transcript}

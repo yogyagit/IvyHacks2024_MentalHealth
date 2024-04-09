@@ -1,11 +1,25 @@
 from flask import Flask, request, jsonify
 import re
 import os
+import sys
 import anthropic 
+import pdb
 import streamlit as st
-app = Flask(__name__)
 
-# Assuming you have the OPENAI_API_KEY set in your Streamlit secrets
+from langchain_community.vectorstores import Chroma
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from langchain_community.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import TextLoader
+from langchain import hub
+
+from langchain_anthropic import ChatAnthropic
+app = Flask(__name__)
+print('bobob')
+
 client = anthropic.Anthropic(api_key=st.secrets.anthropic.ANTHROPIC_API_KEY)
 
 # Hardcoded user credentials (use environment variables or a more secure method in production)
@@ -31,30 +45,70 @@ filenames = [
     "Module 13 - Relaxation.txt",
 ]
 
+# Assuming you have the OPENAI_API_KEY set in your Streamlit secrets
+print('AG: starting server', flush=True)
+print('AG: Server running', flush=True)
+llm = ChatAnthropic(model="claude-3-sonnet-20240229", temperature=0.2, max_tokens=1024)
+print('AG: llm init')
+# print("AG::", len(module_texts))
+# print("AG::", module_texts.keys())
+
+loader = DirectoryLoader(files_dir, glob="**/*.txt", loader_cls=TextLoader)
+docs = loader.load()
+#print(docs)
+print('AG: loaded docs')
+
+#pdb.set_trace()
+
+prompt = hub.pull("rlm/rag-prompt")
+#print(prompt)
+#print(type(prompt))
+# print(f'AG prompt::{prompt}')
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+print('AG: split text')
+splits = text_splitter.split_documents(docs)
+
+vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings())
+print('AG: vector stroe created')
+retriever = vectorstore.as_retriever()
+print('AG: retriever created')
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+rag_chain = (
+    {"context": retriever | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+#print(rag_chain.invoke("I am feeling sad today"))
+
+print('AG: ragchain done')
 # Adjust extraction logic and re-process files
-for filename in filenames:
-    # Extract module number more accurately
-    # This regex captures digits following the word "Module" taking into account possible variations in naming
-    match = re.search(r"Module\s*[-\s]\s*(\d+)", filename, re.IGNORECASE)
-    if match:
-        module_number = match.group(1)
-    else:
-        module_number = "Unknown"
+# for filename in filenames:
+#     # Extract module number more accurately
+#     # This regex captures digits following the word "Module" taking into account possible variations in naming
+#     match = re.search(r"Module\s*[-\s]\s*(\d+)", filename, re.IGNORECASE)
+#     if match:
+#         module_number = match.group(1)
+#     else:
+#         module_number = "Unknown"
 
-    # Full path to the file
-    file_path = os.path.join(files_dir, filename)
+#     # Full path to the file
+#     file_path = os.path.join(files_dir, filename)
 
-    # Read RTF content again
-    with open(file_path, "r", encoding="utf-16") as file:
-        txt_content = file.read()
-    # Store the corrected text content in the dictionary
-    module_texts[module_number] = txt_content
+#     # Read RTF content again
+#     with open(file_path, "r", encoding="utf-16") as file:
+#         txt_content = file.read()
+#     # Store the corrected text content in the dictionary
+#     module_texts[module_number] = txt_content
 
-file_path = os.path.join(files_dir, "Plan Examples.txt")
-# Read RTF content again
-with open(file_path, "r", encoding="utf-16") as file:
-    txt_content = file.read()
-module_texts["Plan Examples"] = txt_content
+# file_path = os.path.join(files_dir, "Plan Examples.txt")
+# # Read RTF content again
+# with open(file_path, "r", encoding="utf-16") as file:
+#     txt_content = file.read()
+# module_texts["Plan Examples"] = txt_content
 
 
 def ordinal(number):
@@ -410,4 +464,7 @@ def end_session_route():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    
+#    sys.stdout.flush()
+    pdb.set_trace()
+
