@@ -1,5 +1,5 @@
 import streamlit as st
-from anthropic import Anthropic
+#from anthropic import Anthropic
 
 # Hardcoded user credentials (use environment variables or a more secure method in production)
 USER_ID = "admin"
@@ -22,7 +22,8 @@ def login_page():
 import streamlit as st
 import requests
 
-FLASK_SERVER_URL = "http://127.0.0.1:5000"  # Update with your Flask server URL
+#FLASK_SERVER_URL = "http://127.0.0.1:5000"  # Update with your Flask server URL
+FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
 
 def send_input_to_backend_initial(user_prompt, transcript):
     data = {"user_prompt": user_prompt, "transcript": transcript}
@@ -48,7 +49,7 @@ def send_input_to_backend_followup(user_prompt, transcript, session_id):
 
 def end_session(transcript):
     data = {"transcript": transcript}
-    print(data)
+    #print(data)
     # Send data to the end_session endpoint
     response = requests.post(f"{FLASK_SERVER_URL}/end_session", json=data)
     
@@ -70,14 +71,17 @@ def chat_interface():
         with st.chat_message("assistant"):
             response = send_input_to_backend_initial("", "")
             st.markdown(response)
+
             st.session_state.messages.append({"role": "assistant", "content": response})
+            
 
     if prompt := st.chat_input("Please type in your response here"):
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        print(list_of_dicts_to_string(st.session_state.messages))
-        response = send_input_to_backend_followup(prompt, list_of_dicts_to_string(st.session_state.messages), st.session_state["session_id"])
+        #print(list_of_dicts_to_string(st.session_state.messages))
+        #response = send_input_to_backend_followup(prompt, list_of_dicts_to_string(st.session_state.messages), st.session_state["session_id"])
+        response = send_input_to_backend_followup(prompt, st.session_state.messages, st.session_state["session_id"])
 
         with st.chat_message("assistant"):
             st.markdown(response)

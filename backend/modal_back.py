@@ -139,6 +139,23 @@ async def process_input_route_followup(request: Request):
     user_prompt = data["user_prompt"]
     #chat_history = data.get("chat_history", [])
     chat_history = data.get("transcript", [])
+    print("AG: transcript", chat_history)
+    print("AG: transcript", type(chat_history))
+    
+    for message in chat_history:
+        if message["role"] == "assistant":
+            message["role"] = "CHATBOT"
+        if message["role"] == "user":
+            message["role"] = "USER"
+        try:
+            message["message"] = message.pop("content")
+        except KeyError:
+            # Handle the case where "content" key does not exist
+            print("Exception: 'content' key does not exist in message")
+    
+
+
+    print("AG: message", type(message))
     session_id = data["session_id"]
     # Continuing a session
     if session_id == 1:
