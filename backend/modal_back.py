@@ -29,7 +29,7 @@ volume = Volume.from_name("my-data-volume", create_if_missing=True)
 mongoDbClient =  AtlasClient()
 
 @stub.cls(image=image, gpu="T4", container_idle_timeout=300,
-          secrets=[Secret.from_name("nomic-key")], volumes={'/data': volume},)
+          secrets=[Secret.from_name("thinkwell-key")], volumes={'/data': volume},)
 class RagChain:
     @enter()
     def enter(self):
@@ -94,7 +94,7 @@ class RagChain:
         return full_prompt
 
 @stub.cls(image = image, gpu="T4", container_idle_timeout=300, 
-        secrets=[Secret.from_name("nomic-key")],)
+        secrets=[Secret.from_name("thinkwell-key")],)
 class CohereChatbot:
     @enter()
     #def start(self, model='command-r', max_tokens=4000, temperature=0.5):
@@ -250,7 +250,7 @@ async def end_session_route(request: Request):
     return {"response": response}
 
 
-@stub.function(image=image, volumes={"/data": volume}, secrets=[Secret.from_name("nomic-key")],)
+@stub.function(image=image, volumes={"/data": volume}, secrets=[Secret.from_name("thinkwell-key")],)
 @asgi_app()
 def fastapi_app():
     print('Noel: starting fastapi app...')
