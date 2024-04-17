@@ -42,14 +42,10 @@ def login_page_google():
         st.session_state["session_id"] += 1
         st.rerun()
 
-    
-
-
 import streamlit as st
 import requests
 
-#FLASK_SERVER_URL = "http://127.0.0.1:5000"  # Update with your Flask server URL
-FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
+FLASK_SERVER_URL = " https://yogyagit--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
 
 def send_input_to_backend_initial(user_prompt, transcript):
     data = {"user_prompt": user_prompt, "transcript": transcript}
@@ -105,7 +101,6 @@ def chat_interface():
 
             st.session_state.messages.append({"role": "assistant", "content": response})
             
-
     if prompt := st.chat_input("Please type in your response here"):
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -136,10 +131,6 @@ def logout_button():
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
-
-
-
-
 
 def auth_flow():
     st.write("Welcome to My App!")

@@ -15,6 +15,10 @@ image = Image.debian_slim(python_version="3.11").pip_install(
     "langchain-text-splitters==0.0.1",
     "chromadb",
     "faiss-cpu",
+    "tiktoken",
+    "langchain_google_vertexai",
+    "google-cloud-bigquery", 
+    "pymongo",
      ).apt_install("git", "curl")
 
 stub = Stub(

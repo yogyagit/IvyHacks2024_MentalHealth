@@ -3,7 +3,9 @@ from fastapi.responses import HTMLResponse
 from modal_image import image, stub
 from modal import asgi_app, Image, Stub, method, enter, Secret
 from modal import Volume
+from atlas import AtlasClient
 import os
+
 
 # from langchain_cohere import ChatCohere
 # from langchain_community.retrievers import CohereRagRetriever
@@ -24,9 +26,10 @@ import os
 web_app = FastAPI()
 
 volume = Volume.from_name("my-data-volume", create_if_missing=True)
+mongoDbClient =  AtlasClient()
 
 @stub.cls(image=image, gpu="T4", container_idle_timeout=300,
-          secrets=[Secret.from_name("thinkwell-key")], volumes={'/data': volume},)
+          secrets=[Secret.from_name("nomic-key")], volumes={'/data': volume},)
 class RagChain:
     @enter()
     def enter(self):
@@ -91,7 +94,7 @@ class RagChain:
         return full_prompt
 
 @stub.cls(image = image, gpu="T4", container_idle_timeout=300, 
-        secrets=[Secret.from_name("thinkwell-key")],)
+        secrets=[Secret.from_name("nomic-key")],)
 class CohereChatbot:
     @enter()
     #def start(self, model='command-r', max_tokens=4000, temperature=0.5):
@@ -120,6 +123,19 @@ print('Noel: llm chatbot init done')
 rag_chain = RagChain()
 print('Noel: llm init done')
 
+@web_app.post("/process_user_data")
+async def process_user_data(request: Request):
+    data = await request.json()
+
+    firstname = data.get("firstname")
+    lastname = data.get("lastname")
+    email = data.get("email")
+    user_id = data.get("user_id")
+    session_id = mongoDbClient.insert_user_data.remote(database_name = 'ThinkWell_AI', collection_name = 'user_data',user_id = user_id, firstname = firstname, lastname = lastname, email_id = email)
+    if session_id > 1:
+        return {"type": "Returing User", "session": session_id}
+    else:
+        return {"type": "New User", "session": 1}
 
 @web_app.post("/process_input_initial")
 async def process_input_route_initial(request: Request):
@@ -131,7 +147,6 @@ async def process_input_route_initial(request: Request):
     Remember, this conversation is a safe space, and everything you share will be kept confidential. Let's start this journey together towards a better understanding of your thoughts and feelings.
     """
     return {"response": intro_message}
-
 
 @web_app.post("/process_input_followup")
 async def process_input_route_followup(request: Request):
@@ -209,6 +224,7 @@ async def end_session_route(request: Request):
     data = await request.json()
     transcript = data.get("transcript", [])
     session_id = data.get("session_id")
+    user_id = data.get("user_id")
 
     # Check if transcript and session ID are provided
     if not transcript or session_id is None:
@@ -227,13 +243,14 @@ async def end_session_route(request: Request):
     else:
         return {"response": "Invalid or unsupported session ID."}
 
+    transcript.append({"role": "assistant", "content": response})
+
+    mongoDbClient.insert_documents.remote(database_name = 'ThinkWell_AI', collection_name = 'user_session_transcripts', session_id = session_id, user_id = user_id, session_transcript = transcript)
+    
     return {"response": response}
 
 
-
-
-
-@stub.function(image=image, volumes={"/data": volume}, secrets=[Secret.from_name("thinkwell-key")],)
+@stub.function(image=image, volumes={"/data": volume}, secrets=[Secret.from_name("nomic-key")],)
 @asgi_app()
 def fastapi_app():
     print('Noel: starting fastapi app...')
