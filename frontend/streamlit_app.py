@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 #from anthropic import Anthropic
 
 # Hardcoded user credentials (use environment variables or a more secure method in production)
@@ -58,6 +59,10 @@ def end_session(transcript):
     
     return response.json()["response"]
 
+def response_stream(chatbot_output):
+    for word in chatbot_output.split():
+        yield word + " "
+        time.sleep(0.05)
 def chat_interface():
     st.title("Let's Talk!")
 
@@ -70,7 +75,8 @@ def chat_interface():
     if st.session_state.messages == []:
         with st.chat_message("assistant"):
             response = send_input_to_backend_initial("", "")
-            st.markdown(response)
+            #st.markdown(response)
+            st.write_stream(response_stream(response))
 
             st.session_state.messages.append({"role": "assistant", "content": response})
             
@@ -84,7 +90,8 @@ def chat_interface():
         response = send_input_to_backend_followup(prompt, st.session_state.messages, st.session_state["session_id"])
 
         with st.chat_message("assistant"):
-            st.markdown(response)
+            #st.markdown(response)
+            st.write_stream(response_stream(response))
         
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.session_state.messages.append({"role": "assistant", "content": response})
