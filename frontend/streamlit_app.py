@@ -1,6 +1,12 @@
 import streamlit as st
 import time
+import streamlit as st
+from google.oauth2 import id_token
+from google.auth.transport import requests
 #from anthropic import Anthropic
+import sys
+sys.path.append('../')
+from auth import *
 
 # Hardcoded user credentials (use environment variables or a more secure method in production)
 USER_ID = "admin"
@@ -18,6 +24,25 @@ def login_page():
             st.rerun()
         else:
             st.error("Incorrect User ID or Password")
+
+
+def login_page_google():
+    st.title("Login Page")
+    #st.write(get_login_str(), unsafe_allow_html=True)
+    # st.write(f'''<h1>
+    # Please login using<a target="_self"
+    # href="{get_login_str()}">here</a></h1>''',
+    #      unsafe_allow_html=True)
+    st.link_button("Google Login", get_login_str(), type="primary")
+    
+    auth_code = st.query_params.get("code")
+    if auth_code:
+        st.write("Login Done")
+        st.session_state["authenticated"] = True
+        st.session_state["session_id"] += 1
+        st.rerun()
+
+    
 
 
 import streamlit as st
@@ -112,6 +137,41 @@ def logout_button():
                 del st.session_state[key]
             st.rerun()
 
+
+
+
+
+def auth_flow():
+    st.write("Welcome to My App!")
+    auth_code = st.query_params.get("code")
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        "client_secret.json", # replace with you json credentials from your google auth app
+        scopes=["https://www.googleapis.com/auth/userinfo.email", "openid"],
+        redirect_uri=redirect_uri,
+    )
+    if auth_code:
+        flow.fetch_token(code=auth_code)
+        credentials = flow.credentials
+        st.write("Login Done")
+        user_info_service = build(
+            serviceName="oauth2",
+            version="v2",
+            credentials=credentials,
+        )
+        user_info = user_info_service.userinfo().get().execute()
+        assert user_info.get("email"), "Email not found in infos"
+        st.session_state["google_auth_code"] = auth_code
+        st.session_state["user_info"] = user_info
+    else:
+        if st.button("Sign in with Google"):
+            authorization_url, state = flow.authorization_url(
+                access_type="offline",
+                include_granted_scopes="true",
+            )
+            webbrowser.open_new_tab(authorization_url)
+
+    
+    
 def main():
     # Setup page configuration
     st.set_page_config(
@@ -151,7 +211,7 @@ def main():
         chat_interface()
         logout_button()  # Moved the logout to the sidebar for logical placement
     else:
-        login_page()
+        login_page_google()
 
     #chat_interface()
 
