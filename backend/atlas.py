@@ -59,6 +59,7 @@ class AtlasClient:
         if document is None:
             print("User Not Found")
             new_document = {
+                'user_id': user_id,
                 'first_name': firstname,
                 'last_name': lastname,
                 'email_id': email_id,

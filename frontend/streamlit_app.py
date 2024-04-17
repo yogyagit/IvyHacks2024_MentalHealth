@@ -12,40 +12,45 @@ from auth import *
 USER_ID = "admin"
 PASSWORD = "password" 
 
-def login_page():
-    st.title("Login Page")
-    user_id = st.text_input("User ID", value="", max_chars=50)
-    password = st.text_input("Password", value="", type="password", max_chars=50)
-
-    if st.button("Login"):
-        if user_id == USER_ID and password == PASSWORD:
-            st.session_state["authenticated"] = True
-            st.session_state["session_id"] += 1
-            st.rerun()
-        else:
-            st.error("Incorrect User ID or Password")
-
 
 def login_page_google():
     st.title("Login Page")
-    #st.write(get_login_str(), unsafe_allow_html=True)
-    # st.write(f'''<h1>
-    # Please login using<a target="_self"
-    # href="{get_login_str()}">here</a></h1>''',
-    #      unsafe_allow_html=True)
     st.link_button("Google Login", get_login_str(), type="primary")
-    
+    st.write("button done")
     auth_code = st.query_params.get("code")
+    # try:
+    #     auth_code = st.experimental_get_query_params()['code']
+    # except:
+    #     auth_code = None
     if auth_code:
         st.write("Login Done")
         st.session_state["authenticated"] = True
-        st.session_state["session_id"] += 1
+        
+        user_id, user_email, user_first_name, user_last_name = user_details()
+        st.write("user id: ", user_id)
+        type, session = store_user_info(user_id, user_email, user_first_name, user_last_name)
+        st.session_state["session_id"] =session
+        st.session_state["type"] = type
         st.rerun()
 
 import streamlit as st
 import requests
 
-FLASK_SERVER_URL = " https://yogyagit--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
+#FLASK_SERVER_URL = " https://yogyagit--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
+FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
+
+def store_user_info(user_id, user_email, user_first_name,user_last_name):
+    data = {"firstname":user_first_name ,"lastname":user_last_name, "email": user_email, "user_id": user_id}
+    # Send data to the process_input endpoint
+    response = requests.post(f"{FLASK_SERVER_URL}/process_user_data", json=data)
+    if response.status_code != 200:
+        return f"Error: Failed to communicate with the backend. Status code: {response.status_code}"
+    type =  response.json()["type"]
+    session =  response.json()["type"]
+
+    return type, session
+
+
 
 def send_input_to_backend_initial(user_prompt, transcript):
     data = {"user_prompt": user_prompt, "transcript": transcript}
