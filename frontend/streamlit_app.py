@@ -15,11 +15,108 @@ PASSWORD = "password"
 
 
 def login_page_google():
-    st.title("Welcome to ThinkWell AI!")
+    # text_update = """
+    # <style>
+    # .title-text {
+    #     color: white;
+    # }
+    # </style>
+    # """
+    # st.markdown(page_bg_img, unsafe_allow_html=True)
+    #st.title("Welcome to ThinkWell AI!")
+    # text_update = """
+    # <style>
+    # .title-text {
+    #     color: white;
+    #     text-align: center;
+    # }
+    # </style>
+    # """
+
+    # # Apply the CSS styling using markdown
+    # st.markdown(text_update, unsafe_allow_html=True)
+
+    # Display the text with the specified CSS class
+    # st.markdown("<h class='title-text'>Welcome to ThinkWell AI!</h>", unsafe_allow_html=True)
+    text_update = """
+    <style>
+    .title-container {
+        display: flex;
+        justify-content: center; /* Center the content horizontally */
+        align-items: center; /* Center the content vertically */
+        height: 100vh; /* Set the container height to full viewport height */
+        background-color: rgba(0, 0, 0, 0); /* Example background color */
+    }
+    .title-text {
+        color: white;
+        font-size: 48px;
+    }
+    </style>
+    """
+
+    # Apply the CSS styling using markdown
+    st.markdown(text_update, unsafe_allow_html=True)
+
+    # Display the text within a container with specified CSS class
+    st.markdown(
+        """
+        <div class='title-container'>
+            <p class='title-text'>Welcome to ThinkWell AI!</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     print("AG:: inside login_page_google.. before link button")
     if not st.session_state["authenticated"]:
-        st.link_button("Login via Google", get_login_str(), type="primary")
-    st.info("You will need a Google account to continue.")
+        #st.link_button("Login via Google", get_login_str(), type="primary")
+        col1, col2 = st.columns([0.8,1])
+        with col2:
+            st.link_button("Login via Google", get_login_str(), type="primary")
+        # button_container_style = """
+        # <style>
+        # .button-container {
+        #     display: flex;
+        #     justify-content: center; /* Center the content horizontally */
+        #     align-items: center; /* Center the content vertically */
+            
+        # }
+
+        # .styled-button {
+        #     background-color: #4CAF50; /* Green background */
+        #     border: none;
+        #     color: white; /* White text */
+        #     padding: 20px 40px; /* Padding around the text */
+        #     text-align: center; /* Center text horizontally */
+        #     text-decoration: none; /* Remove underline */
+        #     display: inline-block;
+        #     font-size: 20px; /* Font size */
+        #     border-radius: 10px; /* Rounded corners */
+        #     transition-duration: 0.4s; /* Animation speed */
+        #     cursor: pointer; /* Cursor pointer on hover */
+        #     box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19); /* Box shadow */
+        # }
+
+        # .styled-button:hover {
+        #     background-color: #45a049; /* Darker green background on hover */
+        # }
+        # </style>
+        # """
+
+        # 
+        # st.markdown(button_container_style, unsafe_allow_html=True)
+
+        # 
+        # st.markdown(
+        #     """
+        #     <div class='button-container'>
+        #         <button class='styled-button' onclick="window.location.href='{get_login_str()}';">Login via Google</button>
+        #     </div>
+        #     """,
+        #     unsafe_allow_html=True
+        # )
+
+    # st.info("You will need a Google account to continue.")
     auth_code = st.query_params.get("code")
     print("AG:: inside google_login", auth_code)
     # try:
@@ -166,7 +263,7 @@ def main():
     page_bg_img = """
     <style>
     .stApp {
-    background-image: url("https://img.freepik.com/free-photo/boardwalk-rocks-skyline-horizon-summer-background_1417-1159.jpg?w=2000&t=st=1713397156~exp=1713397756~hmac=578e46728964b8459ea0dfa1b38911c83473d541bb2a0952fc09ad96204d4b7c");
+    background-image: url("https://images.axios.com/2qLsEMmKnJG3esS2UD6ZV-firQg=/0x0:1920x1080/1920x1080/filters:no_upscale()/2023/02/24/1677276125445.gif?w=1920");
     background-size: cover;
     }
     .st-af { color: #333333; } /* Primary text color */
