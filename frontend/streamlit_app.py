@@ -16,15 +16,19 @@ PASSWORD = "password"
 
 def login_page_google():
     st.title("Welcome to ThinkWell AI!")
-    st.link_button("Login via Google", get_login_str(), type="primary")
+    print("AG:: inside login_page_google.. before link button")
+    if not st.session_state["authenticated"]:
+        st.link_button("Login via Google", get_login_str(), type="primary")
     st.info("You will need a Google account to continue.")
     auth_code = st.query_params.get("code")
+    print("AG:: inside google_login", auth_code)
     # try:
     #     auth_code = st.experimental_get_query_params()['code']
     # except:
     #     auth_code = None
     if auth_code:
-        st.write("You've been successfully logged in!")
+        st.write("Logging you in... please wait")
+        print("AG:: authenticated", auth_code)
         st.session_state["authenticated"] = True
         user_id, user_email, user_first_name, user_last_name = user_details()
         user_type, session = store_user_info(user_id, user_email, user_first_name, user_last_name)
@@ -36,8 +40,8 @@ def login_page_google():
 import streamlit as st
 import requests
 
-FLASK_SERVER_URL = " https://yogyagit--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
-#FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
+#FLASK_SERVER_URL = " https://yogyagit--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
+FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
 
 def store_user_info(user_id, user_email, user_first_name,user_last_name):
     data = {"firstname":user_first_name ,"lastname":user_last_name, "email": user_email, "user_id": user_id}
@@ -140,6 +144,7 @@ def logout_button():
             requests.post(f"{FLASK_SERVER_URL}/logout_session_update", json=data)
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
+            st.query_params.clear()
 
             st.rerun()
     
