@@ -7,6 +7,7 @@ from google.auth.transport import requests
 import sys
 sys.path.append('../')
 from auth import *
+from time import sleep
 
 # Hardcoded user credentials (use environment variables or a more secure method in production)
 USER_ID = "admin"
@@ -14,32 +15,29 @@ PASSWORD = "password"
 
 
 def login_page_google():
-    st.title("Login Page")
-    st.link_button("Google Login", get_login_str(), type="primary")
-    st.write("button done")
+    st.title("Welcome to ThinkWell AI!")
+    st.link_button("Login via Google", get_login_str(), type="primary")
+    st.info("You will need a Google account to continue.")
     auth_code = st.query_params.get("code")
     # try:
     #     auth_code = st.experimental_get_query_params()['code']
     # except:
     #     auth_code = None
     if auth_code:
-        st.write("Login Done")
+        st.write("You've been successfully logged in!")
         st.session_state["authenticated"] = True
-        
         user_id, user_email, user_first_name, user_last_name = user_details()
-        st.write("user id: ", user_id)
-        type, session = store_user_info(user_id, user_email, user_first_name, user_last_name)
+        user_type, session = store_user_info(user_id, user_email, user_first_name, user_last_name)
         st.session_state["session_id"] =session
-        st.session_state["type"] = type
+        st.session_state["user_type"] = user_type
+        st.session_state["user_id"] = user_id
         st.rerun()
 
 import streamlit as st
 import requests
 
-
-#FLASK_SERVER_URL = " https://yogyagit--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
+FLASK_SERVER_URL = " https://yogyagit--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
 #FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
-FLASK_SERVER_URL = " https://noelnebu2206--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
 
 def store_user_info(user_id, user_email, user_first_name,user_last_name):
     data = {"firstname":user_first_name ,"lastname":user_last_name, "email": user_email, "user_id": user_id}
@@ -47,10 +45,10 @@ def store_user_info(user_id, user_email, user_first_name,user_last_name):
     response = requests.post(f"{FLASK_SERVER_URL}/process_user_data", json=data)
     if response.status_code != 200:
         return f"Error: Failed to communicate with the backend. Status code: {response.status_code}"
-    type =  response.json()["type"]
-    session =  response.json()["type"]
+    user_type =  response.json()["user_type"]
+    session =  response.json()["session"]
 
-    return type, session
+    return user_type, session
 
 
 def send_input_to_backend_initial(user_prompt, transcript):
@@ -101,6 +99,7 @@ def chat_interface():
             st.markdown(message["content"])
     if st.session_state.messages == []:
         with st.chat_message("assistant"):
+            time.sleep(0.5)
             response = send_input_to_backend_initial("", "")
             #st.markdown(response)
             st.write_stream(response_stream(response))
@@ -130,43 +129,19 @@ def chat_interface():
 def list_of_dicts_to_string(lst):
     return str(lst)
 
-     
 def logout_button():
     with st.sidebar:
         if st.button("Logout"):
+            data = {
+                "session_id" : st.session_state.session_id,
+                "user_id" : st.session_state.user_id,  
+                "transcript": st.session_state.messages,
+            }
+            requests.post(f"{FLASK_SERVER_URL}/logout_session_update", json=data)
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
+
             st.rerun()
-
-def auth_flow():
-    st.write("Welcome to My App!")
-    auth_code = st.query_params.get("code")
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-        "client_secret.json", # replace with you json credentials from your google auth app
-        scopes=["https://www.googleapis.com/auth/userinfo.email", "openid"],
-        redirect_uri=redirect_uri,
-    )
-    if auth_code:
-        flow.fetch_token(code=auth_code)
-        credentials = flow.credentials
-        st.write("Login Done")
-        user_info_service = build(
-            serviceName="oauth2",
-            version="v2",
-            credentials=credentials,
-        )
-        user_info = user_info_service.userinfo().get().execute()
-        assert user_info.get("email"), "Email not found in infos"
-        st.session_state["google_auth_code"] = auth_code
-        st.session_state["user_info"] = user_info
-    else:
-        if st.button("Sign in with Google"):
-            authorization_url, state = flow.authorization_url(
-                access_type="offline",
-                include_granted_scopes="true",
-            )
-            webbrowser.open_new_tab(authorization_url)
-
     
     
 def main():
@@ -175,7 +150,7 @@ def main():
         page_title="Thinkwell-AI",
         page_icon=":brain:",
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state="collapsed",
         menu_items={
             "Get Help": "https://www.mentalhealth.gov/",
             "About": "This is a mental health support chat application.",
@@ -183,20 +158,22 @@ def main():
     )
 
     # Custom background color and font color
-    st.markdown(
-        """
-        <style>
-        .stApp { background-color: #98FF98; } /* Mint green background */
-        /* Font color for different elements */
-        .st-af { color: #333333; } /* Primary text color */
-        .st-ag { color: #333333; } /* Secondary text color, adjust as needed */
-        /* You might need to inspect the page and target specific elements based on their class for more precision */
-        h1, h2, h3, h4, h5, h6, p, .stTextInput>div>div>input { color: #333333; } /* Headers & text input */
-        .stButton>button { color: #333333; } /* Button text */
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    page_bg_img = """
+    <style>
+    .stApp {
+    background-image: url("https://img.freepik.com/free-photo/boardwalk-rocks-skyline-horizon-summer-background_1417-1159.jpg?w=2000&t=st=1713397156~exp=1713397756~hmac=578e46728964b8459ea0dfa1b38911c83473d541bb2a0952fc09ad96204d4b7c");
+    background-size: cover;
+    }
+    .st-af { color: #333333; } /* Primary text color */
+    .st-af { color: #FCD7C7; } /* Primary text color */
+    .st-b7 { background-color: #FCD7C7; } /* Primary text color */
+    h1, h2, h3, h4, h5, h6 { color: #333333; } /* Headers & text input */
+    P { color: #333333;}
+    .st-emotion-cache-sh2krr p { color: #333333;}
+    .stContainer>div>div>div>div>div>div>div>div {color: #183850;} /* Prussian blue chat text color */
+    </style>
+    """
+    st.markdown(page_bg_img, unsafe_allow_html=True)
 
     if "authenticated" not in st.session_state:
         st.session_state["authenticated"] = False

@@ -100,17 +100,32 @@ class AtlasClient:
 
         db = self.client[database_name]
         collection = db[collection_name]
+
+        filter = {'user_id': user_id, 'session_id': session_id}
+        document = collection.find_one(filter)
+
         try:
-            new_document = {
-                'user_id': user_id,
-                'session_id': session_id,
-                'session_transcript': session_transcript
-            }
-            collection.insert_one(new_document)
+            if document is None:
+                print("User Session Not Found")
+                new_document = {
+                    'user_id': user_id,
+                    'session_id': session_id,
+                    'session_transcript': session_transcript
+                }
+                collection.insert_one(new_document)
+                print("New document inserted.")
+            else:
+                updated_document = collection.find_one_and_update(
+                    filter,
+                    {'$set': {'session_transcript': session_transcript}},
+                    return_document=True
+                )
+                print("Document updated with new session transcript:", updated_document)
         except Exception as e:
             print(f"An error occurred: {e}")
             return None
-
+        
+    
     @method()
     def ping(self):
         """

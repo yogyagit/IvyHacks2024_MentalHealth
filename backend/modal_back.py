@@ -133,9 +133,9 @@ async def process_user_data(request: Request):
     user_id = data.get("user_id")
     session_id = mongoDbClient.insert_user_data.remote(database_name = 'ThinkWell_AI', collection_name = 'user_data',user_id = user_id, firstname = firstname, lastname = lastname, email_id = email)
     if session_id > 1:
-        return {"type": "Returing User", "session": session_id}
+        return {"user_type": "Returing User", "session": session_id}
     else:
-        return {"type": "New User", "session": 1}
+        return {"user_type": "New User", "session": 1}
 
 @web_app.post("/process_input_initial")
 async def process_input_route_initial(request: Request):
@@ -168,12 +168,11 @@ async def process_input_route_followup(request: Request):
             # Handle the case where "content" key does not exist
             print("Exception: 'content' key does not exist in message")
     
-
-
     print("AG: message", type(message))
     session_id = data["session_id"]
+    print(type)
     # Continuing a session
-    if session_id == 1:
+    if session_id >= 1: # YS For testing purposes. Original : session_id == 1 (04/17: 6:55 PM)
         print("Fetching context and generating response using RagChain and CohereChatbot.")
         # Custom prompt that instructs the llm what to do with the fetched context
         custom_prompt = """
@@ -249,6 +248,13 @@ async def end_session_route(request: Request):
     
     return {"response": response}
 
+@web_app.post("/logout_session_update")
+async def logout_session_update(request: Request):
+    data = await request.json()
+    transcript = data.get("transcript", [])
+    session_id = data.get("session_id")
+    user_id = data.get("user_id")
+    mongoDbClient.insert_documents.remote(database_name = 'ThinkWell_AI', collection_name = 'user_session_transcripts', session_id = session_id, user_id = user_id, session_transcript = transcript)
 
 @stub.function(image=image, volumes={"/data": volume}, secrets=[Secret.from_name("thinkwell-key")],)
 @asgi_app()
