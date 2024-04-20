@@ -1,127 +1,22 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from modal_image import image, stub
+from modal_image import image, stub, volume
 from modal import asgi_app, Image, Stub, method, enter, Secret
-from modal import Volume
 from atlas import AtlasClient
-import os
+from rag import RagChain
+from chatbot import CohereChatbot
+from therapy import TherapyContext
 
-
-# from langchain_cohere import ChatCohere
-# from langchain_community.retrievers import CohereRagRetriever
-# from langchain_core.documents import Document
-# from langchain_openai import OpenAIEmbeddings
-# from langchain_community.document_loaders import DirectoryLoader
-# from langchain_community.document_loaders import TextLoader
-
-
-# from langchain import hub
-# from langchain_community.document_loaders import WebBaseLoader
-# from langchain_community.vectorstores import Chroma
-# from langchain_core.output_parsers import StrOutputParser
-# from langchain_core.runnables import RunnablePassthrough
-# from langchain_text_splitters import RecursiveCharacterTextSplitter
-#from langchain_core.prompts import ChatPromptTemplate
 
 web_app = FastAPI()
-
-volume = Volume.from_name("my-data-volume", create_if_missing=True)
-mongoDbClient =  AtlasClient()
-
-@stub.cls(image=image, gpu="T4", container_idle_timeout=300,
-          secrets=[Secret.from_name("thinkwell-key")], volumes={'/data': volume},)
-class RagChain:
-    @enter()
-    def enter(self):
-        from langchain_community.retrievers import CohereRagRetriever
-        from langchain_core.documents import Document
-        from langchain_openai import OpenAIEmbeddings
-        from langchain_community.document_loaders import DirectoryLoader
-        from langchain_community.document_loaders import TextLoader
-        from langchain_cohere import CohereEmbeddings
-
-        from langchain import hub
-        from langchain_community.document_loaders import WebBaseLoader
-        from langchain_community.vectorstores import Chroma
-        from langchain_core.output_parsers import StrOutputParser
-        from langchain_core.runnables import RunnablePassthrough
-        from langchain_text_splitters import RecursiveCharacterTextSplitter
-        from langchain_community.vectorstores import FAISS
-        print("Inside start..1")
-        self.files_dir = "/data/data"
-        self.loader = DirectoryLoader(self.files_dir, glob="**/*.txt", loader_cls=TextLoader)
-        print("Inside start..2")
-        self.docs = self.loader.load()
-        print("Inside start..3..")
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        print("Inside start..4")
-        self.splits = text_splitter.split_documents(self.docs)
-        print("Inside start..5")
-        #self.vectorstore = Chroma.from_documents(documents=self.splits, embedding=OpenAIEmbeddings())
-        self.vectorstore = FAISS.from_documents(documents=self.splits, embedding= CohereEmbeddings(model="embed-english-light-v3.0"))
-        #self.vectorstore = Chroma.from_documents(documents=self.splits, embedding= CohereEmbeddings(model="embed-english-light-v3.0"))
-        self.retriever = self.vectorstore.as_retriever(search_type="similarity", search_kwargs={'k': 4})
-        self.llm = CohereChatbot()
-        print('chatbot created inside ragchain')
-         
-
-    @method()
-    #def invoke(self, question, prompt , llm, chat_history):
-    def invoke(self, question, prompt):
-    #def invoke(self, question):
-        print("Inside invoke")
-        #relevant_docs = self.retriever.search(question, k=5)
-        relevant_docs = self.vectorstore.similarity_search(question)
-        #formatted_docs = "\n\n".join([doc.content for doc in relevant_docs])
-        formatted_docs = "\n\n".join([doc.page_content for doc in relevant_docs])
-        full_prompt = prompt.format(context=formatted_docs, question=question)
-        #response = llm.chat.remote(message=full_prompt, chat_history=chat_history)
-
-        """
-        def format_docs(docs):
-            return "\n\n".join(doc.page_content for doc in docs)
-        
-        rag_chain = (
-            {"context": self.retriever | format_docs, "question": RunnablePassthrough()}
-            | prompt
-            | llm
-            | StrOutputParser()
-        )
-        return rag_chain.invoke({"question": question})
-        """
-
-        #return response
-        return full_prompt
-
-@stub.cls(image = image, gpu="T4", container_idle_timeout=300, 
-        secrets=[Secret.from_name("thinkwell-key")],)
-class CohereChatbot:
-    @enter()
-    #def start(self, model='command-r', max_tokens=4000, temperature=0.5):
-    def enter(self): 
-        print('AG>.inside start for coherer chatbot')
-        import cohere
-        import os
-        self.client = cohere.Client(os.environ["COHERE_API_KEY"])
-        self.model = 'command-r'
-        self.max_tokens = 4000
-        self.temperature = 0.5
-
-    @method()
-    def chat(self, message, chat_history=[]):
-        response = self.client.chat(
-            chat_history=chat_history,
-            message=message,
-            model=self.model,
-            max_tokens=self.max_tokens,
-            temperature=self.temperature
-        )
-        return response.text
+mongoDbClient =  AtlasClient()  
 
 llm = CohereChatbot()
 print('Noel: llm chatbot init done')
 rag_chain = RagChain()
 print('Noel: llm init done')
+therapy_context = TherapyContext()
+print('Noel: context init done')
 
 @web_app.post("/process_user_data")
 async def process_user_data(request: Request):
@@ -154,8 +49,8 @@ async def process_input_route_followup(request: Request):
     user_prompt = data["user_prompt"]
     #chat_history = data.get("chat_history", [])
     chat_history = data.get("transcript", [])
-    print("AG: transcript", chat_history)
-    print("AG: transcript", type(chat_history))
+    #print("AG: transcript", chat_history)
+    #print("AG: transcript", type(chat_history))
     
     for message in chat_history:
         if message["role"] == "assistant":
@@ -175,31 +70,21 @@ async def process_input_route_followup(request: Request):
     if session_id >= 1: # YS For testing purposes. Original : session_id == 1 (04/17: 6:55 PM)
         print("Fetching context and generating response using RagChain and CohereChatbot.")
         # Custom prompt that instructs the llm what to do with the fetched context
-        custom_prompt = """
-        Given the detailed context from the gathered therapy documents and ongoing conversation, please continue the therapy session. 
-        Here are some guidelines based on Cognitive Behavioral Therapy (CBT):
-        - Understand why the patient has come for therapy and help construct a case.
-        - Use the guidelines and techniques of CBT to deepen understanding of the patient's issues.
-        - Maintain the flow of conversation, ensuring that all responses are aligned with therapy goals and the patient's needs.
-        - Remember, you are an AI therapist named Thinkwell, conducting this session over text. Avoid describing actions or gestures, and focus on verbal communication only.
-
-        Context:
-        {{context}}
-
-        Latest query from patient:
-        {{question}}
-
-        Please craft a thoughtful response that adheres to the therapeutic principles mentioned, addressing the patient's concerns directly.
-        """
+        custom_prompt = therapy_context.get_prompt.remote()
         # Use RagChain to fetch context and generate response with the custom prompt
-        print(f"chat_history: {chat_history}")
-        print(f"user_prompt: {user_prompt}")
-        print(f"session_id: {session_id}")
+        #print(f"chat_history: {chat_history}")
+        #print(f"user_prompt: {user_prompt}")
+        #print(f"session_id: {session_id}")
         #llm = CohereChatbot.remote()
-        llm1 = CohereChatbot()
+        #llm1 = CohereChatbot()
         #rag_chain2 = RagChain.remote()
         #response = rag_chain2.invoke.remote(question=user_prompt, prompt=custom_prompt, llm=llm1, chat_history=chat_history)
-        full_prompt = rag_chain.invoke.remote(question=user_prompt, prompt=custom_prompt)
+        #full_prompt = rag_chain.invoke.remote(question=user_prompt, prompt=custom_prompt)
+        #full_prompt = custom_prompt
+        full_prompt = custom_prompt.format(question=user_prompt)
+        print("full_prompt is",full_prompt)
+        print("\n")
+        print("chat_history is",chat_history)
         response = llm.chat.remote(message=full_prompt, chat_history=chat_history)
         
         print("Response received from RagChain and CohereChatbot.")

@@ -1,4 +1,4 @@
-from modal import Image, Stub, Secret
+from modal import Image, Stub, Secret, Volume
 
 #image = Image.debian_slim(python_version="3.10.14").pip_install(
 image = Image.debian_slim(python_version="3.11").pip_install(
@@ -26,3 +26,5 @@ stub = Stub(
     image=image,
     #secrets=[Secret.from_name("nomic-key")],
 )
+
+volume = Volume.from_name("my-data-volume", create_if_missing=True)

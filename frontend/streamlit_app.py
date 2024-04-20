@@ -138,7 +138,8 @@ import streamlit as st
 import requests
 
 #FLASK_SERVER_URL = " https://yogyagit--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
-FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
+#FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
+FLASK_SERVER_URL = "https://noelnebu2206--thinkwell-fastapi-app-dev.modal.run"
 
 def store_user_info(user_id, user_email, user_first_name,user_last_name):
     data = {"firstname":user_first_name ,"lastname":user_last_name, "email": user_email, "user_id": user_id}
@@ -148,6 +149,8 @@ def store_user_info(user_id, user_email, user_first_name,user_last_name):
         return f"Error: Failed to communicate with the backend. Status code: {response.status_code}"
     user_type =  response.json()["user_type"]
     session =  response.json()["session"]
+
+    print("user_typ is ", user_type, "session is ", session)
 
     return user_type, session
 
