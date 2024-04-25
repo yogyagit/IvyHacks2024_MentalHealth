@@ -4,20 +4,32 @@ from modal_image import image, stub, volume
 from modal import asgi_app, Image, Stub, method, enter, Secret
 from atlas import AtlasClient
 from rag import RagChain
-from chatbot import CohereChatbot
+#from chatbot import CohereChatbot
+from chatbot import CohereChatbot_local
 from therapy import TherapyContext
 
 
 web_app = FastAPI()
 mongoDbClient =  AtlasClient()  
 
-llm = CohereChatbot()
-print('Noel: llm chatbot init done')
+llm = CohereChatbot_local()
+print('Noel: llm chatbot (LOCAL)init done')
 rag_chain = RagChain()
 print('Noel: llm init done')
 therapy_context = TherapyContext()
 print('Noel: context init done')
 
+
+@web_app.post("/model_test")
+async def model_test(request: Request):
+    data = await request.json()
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+
+    tokenizer = AutoTokenizer.from_pretrained("CohereForAI/c4ai-command-r-v01", local_files_only=True)
+    model = AutoModelForCausalLM.from_pretrained("CohereForAI/c4ai-command-r-v01", local_files_only=True)
+    
+
+#model_local = Model()
 @web_app.post("/process_user_data")
 async def process_user_data(request: Request):
     data = await request.json()
@@ -52,18 +64,18 @@ async def process_input_route_followup(request: Request):
     #print("AG: transcript", chat_history)
     #print("AG: transcript", type(chat_history))
     
-    for message in chat_history:
-        if message["role"] == "assistant":
-            message["role"] = "CHATBOT"
-        if message["role"] == "user":
-            message["role"] = "USER"
-        try:
-            message["message"] = message.pop("content")
-        except KeyError:
-            # Handle the case where "content" key does not exist
-            print("Exception: 'content' key does not exist in message")
+    # for message in chat_history:
+    #     if message["role"] == "assistant":
+    #         message["role"] = "CHATBOT"
+    #     if message["role"] == "user":
+    #         message["role"] = "USER"
+    #     try:
+    #         message["message"] = message.pop("content")
+    #     except KeyError:
+    #         # Handle the case where "content" key does not exist
+    #         print("Exception: 'content' key does not exist in message")
     
-    print("AG: message", type(message))
+    #print("AG: message", type(message))
     session_id = data["session_id"]
     print(type)
     # Continuing a session
@@ -145,4 +157,5 @@ async def logout_session_update(request: Request):
 @asgi_app()
 def fastapi_app():
     print('Noel: starting fastapi app...')
+    
     return web_app
