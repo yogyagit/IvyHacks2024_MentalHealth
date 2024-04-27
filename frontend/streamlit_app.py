@@ -15,29 +15,24 @@ PASSWORD = "password"
 
 
 def login_page_google():
-    # text_update = """
-    # <style>
-    # .title-text {
-    #     color: white;
-    # }
-    # </style>
-    # """
-    # st.markdown(page_bg_img, unsafe_allow_html=True)
-    #st.title("Welcome to ThinkWell AI!")
-    # text_update = """
-    # <style>
-    # .title-text {
-    #     color: white;
-    #     text-align: center;
-    # }
-    # </style>
-    # """
 
-    # # Apply the CSS styling using markdown
-    # st.markdown(text_update, unsafe_allow_html=True)
-
-    # Display the text with the specified CSS class
-    # st.markdown("<h class='title-text'>Welcome to ThinkWell AI!</h>", unsafe_allow_html=True)
+    page_bg_img = """
+    <style>
+    .stApp {
+    background-image: url("https://images.axios.com/2qLsEMmKnJG3esS2UD6ZV-firQg=/0x0:1920x1080/1920x1080/filters:no_upscale()/2023/02/24/1677276125445.gif?w=1920");
+    background-size: cover;
+    }
+    .st-af { color: #FFFFFF; } /* Primary text color */
+    .st-af { color: #FCD7C7; } /* Primary text color */
+    .st-b7 { background-color: #FCD7C7; } /* Primary text color */
+    h1, h2, h3, h4, h5, h6 { color: #333333; } /* Headers & text input */
+    P { color: #333333;}
+    .st-emotion-cache-sh2krr p { color: #333333;}
+    .stContainer>div>div>div>div>div>div>div>div {color: #183850;} /* Prussian blue chat text color */
+    </style>
+    """
+    st.markdown(page_bg_img, unsafe_allow_html=True)
+    
     text_update = """
     <style>
     .title-container {
@@ -57,7 +52,7 @@ def login_page_google():
     # Apply the CSS styling using markdown
     st.markdown(text_update, unsafe_allow_html=True)
 
-    # Display the text within a container with specified CSS class
+   
     st.markdown(
         """
         <div class='title-container'>
@@ -124,7 +119,7 @@ def login_page_google():
     # except:
     #     auth_code = None
     if auth_code:
-        st.write("Logging you in... please wait")
+        #st.write("Logging you in... please wait")
         print("AG:: authenticated", auth_code)
         st.session_state["authenticated"] = True
         user_id, user_email, user_first_name, user_last_name = user_details()
@@ -132,14 +127,16 @@ def login_page_google():
         st.session_state["session_id"] =session
         st.session_state["user_type"] = user_type
         st.session_state["user_id"] = user_id
+        st.empty()
+        #time.sleep(1)
         st.rerun()
 
 import streamlit as st
 import requests
 
 #FLASK_SERVER_URL = " https://yogyagit--thinkwell-fastapi-app-dev.modal.run"  # Update with your Flask server URL
-#FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
-FLASK_SERVER_URL = "https://noelnebu2206--thinkwell-fastapi-app-dev.modal.run"
+FLASK_SERVER_URL = "https://anubhavghildiyal--thinkwell-fastapi-app-dev.modal.run"
+#FLASK_SERVER_URL =  "https://noelnebu2206--thinkwell-fastapi-app-dev.modal.run" 
 
 def store_user_info(user_id, user_email, user_first_name,user_last_name):
     data = {"firstname":user_first_name ,"lastname":user_last_name, "email": user_email, "user_id": user_id}
@@ -149,8 +146,6 @@ def store_user_info(user_id, user_email, user_first_name,user_last_name):
         return f"Error: Failed to communicate with the backend. Status code: {response.status_code}"
     user_type =  response.json()["user_type"]
     session =  response.json()["session"]
-
-    print("user_typ is ", user_type, "session is ", session)
 
     return user_type, session
 
@@ -193,8 +188,38 @@ def response_stream(chatbot_output):
         yield word + " "
         time.sleep(0.05)
 def chat_interface():
-    st.title("Let's Talk!")
+    text_update = """
+    <style>
+    .title-container {
+        display: flex;
+        justify-content: center; /* Center the content horizontally */
+        align-items: center; /* Center the content vertically */
+        background-color: rgba(0, 0, 0, 0); /* Example background color */
+    }
+    .title-text {
+        color: white;
+        font-size: 48px;
+    }
+    .chat-interface {
+        background-color: white !important; /* Grey background color */
+        color: white; /* White text color */
+    }
+    </style>
+    """
 
+    # Apply the CSS styling using markdown
+    st.markdown(text_update, unsafe_allow_html=True)
+
+    st.markdown(
+        """
+        <div class='title-container'>
+            <strong><p class='title-text'>Hello there, let's Talk!!</p></strong>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    #st.title("Let's Talk!")
+    
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -263,22 +288,22 @@ def main():
     )
 
     # Custom background color and font color
-    page_bg_img = """
-    <style>
-    .stApp {
-    background-image: url("https://images.axios.com/2qLsEMmKnJG3esS2UD6ZV-firQg=/0x0:1920x1080/1920x1080/filters:no_upscale()/2023/02/24/1677276125445.gif?w=1920");
-    background-size: cover;
-    }
-    .st-af { color: #333333; } /* Primary text color */
-    .st-af { color: #FCD7C7; } /* Primary text color */
-    .st-b7 { background-color: #FCD7C7; } /* Primary text color */
-    h1, h2, h3, h4, h5, h6 { color: #333333; } /* Headers & text input */
-    P { color: #333333;}
-    .st-emotion-cache-sh2krr p { color: #333333;}
-    .stContainer>div>div>div>div>div>div>div>div {color: #183850;} /* Prussian blue chat text color */
-    </style>
-    """
-    st.markdown(page_bg_img, unsafe_allow_html=True)
+    # page_bg_img = """
+    # <style>
+    # .stApp {
+    # background-image: url("https://images.axios.com/2qLsEMmKnJG3esS2UD6ZV-firQg=/0x0:1920x1080/1920x1080/filters:no_upscale()/2023/02/24/1677276125445.gif?w=1920");
+    # background-size: cover;
+    # }
+    # .st-af { color: #FFFFFF; } /* Primary text color */
+    # .st-af { color: #FCD7C7; } /* Primary text color */
+    # .st-b7 { background-color: #FCD7C7; } /* Primary text color */
+    # h1, h2, h3, h4, h5, h6 { color: #333333; } /* Headers & text input */
+    # P { color: #333333;}
+    # .st-emotion-cache-sh2krr p { color: #333333;}
+    # .stContainer>div>div>div>div>div>div>div>div {color: #183850;} /* Prussian blue chat text color */
+    # </style>
+    # """
+    # st.markdown(page_bg_img, unsafe_allow_html=True)
 
     if "authenticated" not in st.session_state:
         st.session_state["authenticated"] = False
@@ -286,6 +311,8 @@ def main():
     if "session_id" not in st.session_state:
         st.session_state["session_id"] = 0
     
+    #sleep(1.00)
+
     if st.session_state["authenticated"]:
         chat_interface()
         logout_button()  # Moved the logout to the sidebar for logical placement
